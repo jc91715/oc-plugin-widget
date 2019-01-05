@@ -1,0 +1,173 @@
+<?php if ($this->previewMode): ?>
+
+    <div class="form-control">
+        <?= $value ?>
+    </div>
+
+<?php else: ?>
+    <input
+        type="hidden"
+        name="<?= $name ?>"
+        value="<?= $value ?>"
+        class="form-control"
+        autocomplete="off" id="<?= $inputId ?>"
+    />
+<input type="file" name="custom-file" id="<?= $inputFileId ?>" />
+    <?php if($ifCrop):?>
+        <img src="<?= $value ?>" alt="" id="<?= $imgId ?>" />
+    <?php else: ?>
+        <img src="<?= $value ?>" alt="" id="<?= $imgId ?>" style="width:500px;"/>
+    <?php endif?>
+<p id="<?= $cropId ?>" class="btn brn-primary">确认裁剪</p>
+<?php endif ?>
+<script>
+    /*
+     * This is a sample JavaScript file used by {{ name }}
+     *
+     * You can delete this file if you want
+     */
+
+    $(document).ready(function(){
+        var ifCrop = parseInt('<?= $ifCrop ?>')
+        var inputId= '<?= $inputId ?>'
+        var inputFileId= '<?= $inputFileId ?>'
+        var imgId= '<?= $imgId ?>'
+        var cropId= '<?= $cropId ?>'
+        var radio= '<?= $radio ?>'
+
+        $('#'+cropId).hide()
+        var api
+        var  options= {
+            width: 250,
+            height: 250,
+            handles: ['sw','nw','ne','se'],
+            aspectRatio:radio,
+            setSelect : [ 0, 0, 300, 375 ],
+            // allowSelect : false,
+            // minSize : [300, 375],
+        }
+        var target0={h: 0,w: 0,x: 0,x2:0,y:0,y2:0}
+        var state = false
+        $('#'+inputFileId).on('change',function(){
+            var reader = new FileReader();
+            var AllowImgFileSize = 2100000; //上传图片最大值(单位字节)（ 2 M = 2097152 B ）超过2M上传失败
+            var file = $('#'+inputFileId)[0].files[0];
+
+
+            var imgUrlBase64;
+            if (file) {
+                //将文件以Data URL形式读入页面
+                imgUrlBase64 = reader.readAsDataURL(file);
+                reader.onload = function (e) {
+                    //var ImgFileSize = reader.result.substring(reader.result.indexOf(",") + 1).length;//截取base64码部分（可选可不选，需要与后台沟通）
+                    if (AllowImgFileSize != 0 && AllowImgFileSize < reader.result.length) {
+                        alert( '上传失败，请上传不大于2M的图片！');
+                        $('#'+inputFileId).val('')
+                        return;
+                    }else{
+                        //执行上传操作
+                        // console.log(reader.result)
+                        // $('#'+imgId).attr('src',reader.result)
+                        $.request('onCustomUpload', {
+                            data: {base64: reader.result,ifCrop:ifCrop},
+                            success: function(res) {
+                                if(api){
+                                    api.destroy()
+                                    state=false
+                                }
+                                //destroy后，可能把图片标签也去掉
+                                if(!($('#'+imgId).length>0)){
+                                    $('#'+inputFileId).after('<img src="" id="<?= $imgId ?>" >')
+                                    console.log('无')
+                                }
+
+                                if(!ifCrop){
+                                     $('#'+inputId).val(res.src)
+                                    $('#'+imgId).attr('src',res.src)
+                                }else{
+
+                                    $('#'+cropId).show()
+                                    // $('#'+inputId).val(JSON.parse(res.result).src)
+                                    $('#'+imgId).attr('src',res.src)
+                                    $('#'+imgId).Jcrop(options, function(){
+
+                                        api = this
+                                        api.container.on('cropmove', function(e,s,c){
+                                            state = true
+                                            target0=c
+                                            console.log(c)
+
+                                        })
+                                    })
+
+                                }
+
+
+                                console.log(res)
+                                console.log('Finished!');
+                            }
+                        })
+
+
+                    }
+                }
+            }
+        })
+
+        $('#'+cropId).click(function(){
+            if(!api){
+                $.oc.flashMsg({
+                    'text': '请先上传图片',
+                    'class': 'error',
+                    'interval': 3
+                })
+                return
+            }
+
+            if(!state){
+                $.oc.flashMsg({
+                    'text': '请先裁剪图片',
+                    'class': 'error',
+                    'interval': 3
+                })
+                return
+            }
+            $.request('onCrop',{
+                data:{
+                    crop:target0,
+                    src:$('#'+imgId).attr('src')
+                },
+                success(res){
+                    if(!res.code){
+                        console.log(res)
+                        if(api){
+                            console.log(api)
+                            api.destroy()
+                            state=false
+                        }
+
+                        $('#'+inputId).val(res.src)
+                        $('#'+imgId).attr('src',res.src)
+                        $('#'+cropId).hide()
+                        $.oc.flashMsg({
+                            'text': '裁剪成功',
+                            'class': 'success',
+                            'interval': 3
+                        })
+                    }else{
+                        $.oc.flashMsg({
+                            'text': res.msg,
+                            'class': 'error',
+                            'interval': 3
+                        })
+                    }
+
+
+                }
+            })
+
+        })
+    });
+
+
+</script>
