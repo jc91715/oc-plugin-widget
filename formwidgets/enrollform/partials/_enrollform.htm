@@ -1,0 +1,259 @@
+<?php if ($this->previewMode): ?>
+
+    <div class="form-control">
+        <?= $value ?>
+    </div>
+
+<?php else: ?>
+
+
+<div id="app">
+    <input
+        type="hidden"
+        name="<?= $name ?>"
+        value='<?= $value ?>'
+        class="form-control"
+        autocomplete="off"
+        id="enroll_form"
+    />
+    <input  v-model='inp' id="inp" class="form-control" type="hidden">
+    <div class="" style="display: flex;width: 100%">
+        <div class="" @click="add_field_type('radio-group')" style="flex: 1">添加单选题</div>
+        <div class="" @click="add_field_type('checkbox-group')" style="flex: 1">添加多选题</div>
+        <div class="" @click="add_field_type('text')" style="flex: 1">添加文本框</div>
+    </div>
+
+    <div>
+        <div v-for="(input_temp,index) in inputs_temp" :key="index">
+            <div v-if="input_temp.type=='radio-group'" class="flex-box">
+                <div class="box-left"><div class=""><label for="">单选题:</label> <span @click="delete_field_type(index)">删除</span><input v-model="input_temp.label" class="form-control"></div></div>
+
+                <!--<div class="">名字:<input v-model="input_temp.name"></div>-->
+                <div class="box-right" style="margin-left: 50px">
+                    <div v-for="(radio_temp,index1) in input_temp.values" class="">
+                        <div>答案{{index1+1}};<span style="" @click="del_radio_value(index,index1)" >删除</span><input v-model="radio_temp.label" class="form-control"></div>
+                        <!--<div>值:<input v-model="radio_temp.value"></div>-->
+
+                    </div>
+                    <div class="" @click="add_radio_value(index)">添加</div>
+                </div>
+
+
+                <hr>
+            </div>
+            <div v-if="input_temp.type=='checkbox-group'">
+
+                <div class="">多选题:<span @click="delete_field_type(index)">删除</span><input v-model="input_temp.label" class="form-control"></div>
+                <!--<div class="">名字:<input v-model="input_temp.name"></div>-->
+                <div style="margin-left: 50px">
+                    <div v-for="(checkbox_temp,index2) in input_temp.values">
+                        <div>答案{{index2+1}}:<span style="" @click="del_radio_value(index,index2)" >删除</span><input v-model="checkbox_temp.label" class="form-control"> </div>
+                        <!--<div>值:<input v-model="checkbox_temp.value"></div>-->
+                    </div>
+                    <div class="" @click="add_radio_value(index)">添加</div>
+                </div>
+
+                <hr>
+            </div>
+            <div v-if="input_temp.type=='text'">
+                <div class="">文本框:<span @click="delete_field_type(index)">删除</span><input v-model="input_temp.label" class="form-control"></div>
+                <!--<div class="">名字:<input v-model="input_temp.name"></div>-->
+                <hr>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            message: 'Hello Vue!',
+            inputs_temp:[],
+            inputs:[
+                {
+                    "type": "radio-group",
+                    "label": "单选组",
+                    "name": "radio-group-1545726226927",
+                    "values": [
+                        {
+                            "label": "Option 1",
+                            "value": "option-1"
+                        },
+                        {
+                            "label": "Option 2",
+                            "value": "option-2"
+                        },
+                        {
+                            "label": "Option 3",
+                            "value": "option-3"
+                        }
+                    ]
+                },
+                {
+                    "type": "checkbox-group",
+                    "label": "复选框组",
+                    "name": "checkbox-group-1545726286856",
+                    "values": [
+                        {
+                            "label": "Option 1",
+                            "value": "option-1",
+                            "selected": true
+                        },
+                        {
+                            "label": "eaaaf",
+                            "value": "ertert"
+                        }
+                    ]
+                },
+                {
+                    "type": "text",
+                    "label": "单行文本",
+                    "className": "form-control",
+                    "name": "text-1545726324447",
+                    "subtype": "text"
+                }
+            ]
+        },
+        computed:{
+            inp(){
+                this.sync_inputs_temp()
+                return JSON.stringify(this.inputs_temp)
+            },
+
+        },
+        created(){
+            if($('#enroll_form').val()){
+                this.inputs_temp = JSON.parse($('#enroll_form').val())
+            }
+        },
+        watch: {
+
+        },
+        methods:{
+            add_field_type(type){
+                switch (type) {
+                    case 'radio-group':
+                        this.add_radio_group()
+                        break;
+                    case 'checkbox-group':
+                        this.add_checkbox_group()
+                        break;
+                    case 'text':
+                        this.add_text()
+                        break;
+                }
+                this.sync_inputs_temp()
+            },
+            sync_inputs_temp(){
+                $('#enroll_form').val(JSON.stringify(this.inputs_temp))
+            },
+            delete_field_type(index) {
+                this.inputs_temp.splice(index,1)
+                this.sync_inputs_temp()
+            },
+            add_radio_group() {
+                var radio_group_temp = {
+                    "type": "radio-group",
+                    "label": "单选组",
+                    "name": "radio_group_"+this.randomWord(false,10),
+                    "value":"",
+                    "values": [
+                        {
+                            "label": "Option 1",
+                            "value": "radio_"+this.randomWord(false,10)
+                        },
+                        {
+                            "label": "Option 2",
+                            "value": "radio_"+this.randomWord(false,10)
+                        },
+                        {
+                            "label": "Option 3",
+                            "value": "radio_"+this.randomWord(false,10)
+                        }
+                    ]
+                }
+                this.inputs_temp.push(radio_group_temp)
+                this.sync_inputs_temp()
+            },
+            add_checkbox_group() {
+                var checkbox_group_temp = {
+                    "type": "checkbox-group",
+                    "label": "多选组",
+                    "name": "checkbox_group_"+this.randomWord(false,10),
+                    "value":[],
+                    "values": [
+                        {
+                            "label": "Option 1",
+                            "value": "checkbox_"+this.randomWord(false,10)
+                        },
+                        {
+                            "label": "Option 2",
+                            "value": "checkbox_"+this.randomWord(false,10)
+                        },
+                        {
+                            "label": "Option 3",
+                            "value": "checkbox_"+this.randomWord(false,10)
+                        }
+                    ]
+                }
+                this.inputs_temp.push(checkbox_group_temp)
+                this.sync_inputs_temp()
+            },
+            add_text() {
+                var text_temp = {
+                    "type": "text",
+                    "label": "单行文本",
+                    "name": "text_"+this.randomWord(false,10),
+                    "value":"",
+
+                }
+                this.inputs_temp.push(text_temp)
+                this.sync_inputs_temp()
+            },
+            del_radio_value(index,index1) {
+                var i=0
+                this.inputs_temp = this.inputs_temp.map(function(item){
+                    if(i==index){
+                        item.values.splice(index1,1)
+                    }
+                    i++
+                    return item
+                })
+                this.sync_inputs_temp()
+            },
+            add_radio_value(index) {
+                var i=0
+                var value_temp = {
+                    "label": "Option",
+                    "value": "checkbox_"+this.randomWord(false,10)
+                }
+                this.inputs_temp = this.inputs_temp.map(function(item){
+                    if(i==index){
+                        item.values.push(value_temp)
+                    }
+                    i++
+                    return item
+                })
+                this.sync_inputs_temp()
+            },
+            randomWord(randomFlag, min, max){
+                var str = "",
+                    range = min,
+                    arr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+
+                // 随机产生
+                if(randomFlag){
+                    range = Math.round(Math.random() * (max-min)) + min;
+                }
+                for(var i=0; i<range; i++){
+                    pos = Math.round(Math.random() * (arr.length-1));
+                    str += arr[pos];
+                }
+                return str;
+            }
+        }
+    })
+</script>
+
+<?php endif ?>
